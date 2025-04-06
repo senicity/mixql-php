@@ -26,7 +26,15 @@ class Extensions {
 
     public function uppercase(): self
     {
-        $this->query = $this->query . MIXQL_UPPERCASE;
+        $uppercaseQuery = $this->query . ' ' . MIXQL_UPPERCASE;
+        if(strpos($this->query, "\\n")) {
+            $lines = explode("\\n", $this->query);
+            $query = $lines[0] ?? $this->query;
+            $params = implode("\\n", array_slice($lines, 1));
+            
+            $uppercaseQuery = $query . MIXQL_UPPERCASE . "\\n" . $params;
+        }
+        $this->query = $uppercaseQuery;
         return $this;
     }
 
@@ -35,5 +43,13 @@ class Extensions {
         $this->query = $this->query . MIXQL_STOREAS . $name;
         return $this;
     } 
+
+    public function bind(array $params): self
+    {
+        foreach($params as $param){
+            $this->query .= '\n' . $param;
+        }
+        return $this;
+    }
 
 }
