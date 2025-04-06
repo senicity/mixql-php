@@ -25,8 +25,10 @@ class Query extends CommandHelpers {
         //$result = $this->mixql->createSalt()->amount(3)->length(256)->sha()->execute();
         //$result = $this->mixql->storeList()->execute();
         //$result = $this->mixql->storeDelete('test-data')->execute();
-        $result = $this->mixql->storeList()->execute();
+        //$result = $this->mixql->storeList()->execute();
         //$result = $this->mixql->select($this->params[0])->store('test-data')->execute();
+
+        $result = $this->mixql->select('SHA1(:input, MD5(:input2))')->bind(['test1','test2'])->execute();
 
         if($result == 'INVALID_INPUT'){
             echo $this->color("There is an ERROR in your query.","red","error") . "\n";
