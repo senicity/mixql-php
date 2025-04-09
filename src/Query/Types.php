@@ -28,6 +28,12 @@ class QueryTypes extends Extensions {
         return $this;
     }
 
+    public function createUUID(): self
+    {
+        $this->query = MIXQL_CREATE_UUID;
+        return $this;
+    } 
+
     public function storeList(): self
     {
         $this->query = MIXQL_STORE_LIST;
