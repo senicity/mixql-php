@@ -31,17 +31,10 @@ class MixQL extends QueryTypes {
         return $this;
     }
 
-    public function json(): self
-    {
-        $this->res = json_encode(
-            $this->array()->res
-        );
-        return $this;
-    }
-
     public function __toString(): string
     {
         return $this->res;
     }
+
 
 }
