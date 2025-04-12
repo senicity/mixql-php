@@ -47,9 +47,65 @@ class Extensions {
     public function bind(array $params): self
     {
         foreach($params as $param){
-            $this->query .= '\n' . $param;
+            $this->query .= "\n" . $param;
         }
         return $this;
+    }
+
+    public function rawQuery(): string
+    {
+        return $this->query;
+    }
+
+    public function json(): self
+    {   
+        $this->res = json_encode(
+            $this->array()
+        );
+        return $this;
+    }
+
+    public function pretty(): self
+    {
+        $this->res = json_encode(
+            json_decode(
+                $this->res, true
+            ),
+            JSON_PRETTY_PRINT
+        );
+        return $this;
+    }
+
+    public function array(): array
+    {
+        if (str_contains($this->res, MIXQL_STORED_QUERIES)) {
+            return $this->parseRawList($this->res);
+        }
+
+        $normalized = str_replace(["\r\n", "\r"], "\n", (string) $this->res);
+        $lines = explode("\n", $normalized);
+        return array_filter(array_map('trim', $lines));
+    }
+
+    public function parseRawList(string $response): array
+    {
+        $lines = explode("\n", $response);
+
+        $data = [];
+        foreach ($lines as $line) {
+            if (preg_match('/^\|\s*(.*?)\s*\|\s*(.*?)\s*\|$/', $line, $matches)) {
+                $name = trim($matches[1]);
+                $query = trim($matches[2]);
+                if (strtolower($name) === 'name' && strtolower($query) === 'query') {
+                    continue;
+                }
+                $data[] = [
+                    'name' => $name,
+                    'query' => $query
+                ];
+            }
+        }
+        return $data;
     }
 
 }
