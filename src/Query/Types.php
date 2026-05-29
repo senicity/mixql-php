@@ -46,4 +46,22 @@ class QueryTypes extends Extensions {
         return $this;
     }
 
+    public function storeSelect(string $name): self
+    {
+        $this->query = MIXQL_STORE_SELECT . $name;
+        return $this;
+    }
+
+    public function storeUse(string $name): self
+    {
+        $this->query = MIXQL_STORE_USE . $name;
+        return $this;
+    }
+
+    public function auth(string $username, string $password): self
+    {
+        $this->query = MIXQL_AUTH . $username . ':' . $password . "\n" . $this->query;
+        return $this;
+    }
+
 }
