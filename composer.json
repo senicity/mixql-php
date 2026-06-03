@@ -1,0 +1,25 @@
+{
+    "name": "senicity/mixql",
+    "description": "A fluent PHP client library for the MixQL encryption server",
+    "type": "library",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Senicity",
+            "homepage": "https://senicity.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "classmap": [
+            "src/"
+        ],
+        "files": [
+            "src/Constants/Define.php"
+        ]
+    },
+    "minimum-stability": "stable",
+    "homepage": "https://instanceio.com"
+}
