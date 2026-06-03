@@ -147,7 +147,74 @@ $result = $mixql->select('BASE64_ENCODE(:text)')
                ->execute();
 ```
 
-### 2. Encryption / Decryption
+### 2. SHA-256 & SHA-512 Hashing
+
+```php
+// SHA-256 hash (recommended over SHA1)
+$result = $mixql->sha256()
+               ->bind(['password123'])
+               ->execute();
+
+// SHA-512 hash
+$result = $mixql->sha512()
+               ->bind(['password123'])
+               ->execute();
+
+// With nested expression
+$result = $mixql->sha256('CONCAT(:a, :b)')
+               ->bind(['foo', 'bar'])
+               ->execute();
+
+// Uppercase output
+$result = $mixql->sha256()
+               ->bind(['hello'])
+               ->uppercase()
+               ->execute();
+```
+
+### 3. HMAC-SHA256
+
+```php
+// HMAC keyed hash (returns 64-char hex)
+$result = $mixql->hmac()
+               ->bind(['mySecretKey', 'message to sign'])
+               ->execute();
+
+// With custom expressions
+$result = $mixql->hmac(':secret', ':data')
+               ->bind(['key123', 'payload'])
+               ->execute();
+```
+
+### 4. Argon2 Password Hashing
+
+```php
+// Hash a password with Argon2id (recommended for password storage)
+$hash = $mixql->argon2()
+             ->bind(['mypassword123'])
+             ->execute();
+
+echo $hash; // Encoded Argon2 hash with embedded salt
+
+// Verify a password against a stored hash
+$result = $mixql->argon2Verify()
+               ->bind([$storedHash, 'mypassword123'])
+               ->execute();
+
+echo $result; // "true" or "false"
+
+// Chain with SHA256 pre-hashing
+$hash = $mixql->argon2('SHA256(:input)')
+             ->bind(['mypassword123'])
+             ->execute();
+
+// Verify chained hash (apply same inner function)
+$result = $mixql->argon2Verify(':hash', 'SHA256(:password)')
+               ->bind([$storedHash, 'mypassword123'])
+               ->execute();
+```
+
+### 5. Encryption / Decryption
 
 ```php
 // Encrypt a value (uses server's configured enc_key)
@@ -213,7 +280,61 @@ $decrypted = $mixql->select('DEC(:input)')
                    ->execute();
 ```
 
-### 3. CREATE SALT (Salt Generation)
+### 6. AES-256-GCM Encryption (Recommended)
+
+```php
+// GCM authenticated encryption (recommended over ENC)
+$encrypted = $mixql->encGcm()
+                   ->bind(['my secret data'])
+                   ->execute();
+
+// GCM decryption
+$decrypted = $mixql->decGcm()
+                   ->bind([$encrypted])
+                   ->execute();
+
+// GCM with custom key
+$encrypted = $mixql->encGcm()
+                   ->bind(['my secret data'])
+                   ->key('mysecretkey123')
+                   ->execute();
+
+// GCM decrypt with custom key
+$decrypted = $mixql->decGcm()
+                   ->bind([$encrypted])
+                   ->key('mysecretkey123')
+                   ->execute();
+
+// GCM with SALT (layered encryption)
+$encrypted = $mixql->encGcm()
+                   ->salt('salt1', 'salt2')
+                   ->bind(['my secret data'])
+                   ->execute();
+
+// GCM with PEPPER (character interleaving)
+$encrypted = $mixql->encGcm()
+                   ->pepper('abc', 'xyz')
+                   ->bind(['my secret data'])
+                   ->execute();
+
+// GCM full: KEY + SALT + PEPPER
+$encrypted = $mixql->encGcm()
+                   ->key('mykey')
+                   ->salt('salt1', 'salt2')
+                   ->pepper('pep1', 'pep2')
+                   ->bind(['my secret data'])
+                   ->execute();
+
+// GCM decrypt with same KEY + SALT + PEPPER
+$decrypted = $mixql->decGcm()
+                   ->key('mykey')
+                   ->salt('salt1', 'salt2')
+                   ->pepper('pep1', 'pep2')
+                   ->bind([$encrypted])
+                   ->execute();
+```
+
+### 7. CREATE SALT (Salt Generation)
 
 ```php
 // Single salt (16 characters default)
@@ -238,7 +359,7 @@ $result = $mixql->createSalt()
                ->execute();
 ```
 
-### 4. CREATE KEY (Key Generation)
+### 8. CREATE KEY (Key Generation)
 
 ```php
 // Single encryption key
@@ -250,14 +371,14 @@ $result = $mixql->createKey()
                ->execute();
 ```
 
-### 5. CREATE UUID (UUID Generation)
+### 9. CREATE UUID (UUID Generation)
 
 ```php
 // Generate a UUID
 $result = $mixql->createUUID()->execute();
 ```
 
-### 6. STORE Commands (Persistent Queries)
+### 10. STORE Commands (Persistent Queries)
 
 ```php
 // Store a query for reuse
@@ -280,7 +401,7 @@ $result = $mixql->storeUse('hash_password')
 $result = $mixql->storeDelete('hash_password')->execute();
 ```
 
-### 7. Raw Queries
+### 11. Raw Queries
 
 ```php
 // Execute raw MixQL query
@@ -373,17 +494,47 @@ print_r($keys);
 Run the test suite:
 
 ```bash
-# Run all query tests
-php bin/run.php Query
-
 # Run basic tests
 php bin/run.php Test
+
+# Run all query tests
+php bin/run.php Query
 
 # Test with specific options
 php bin/run.php Query --json --pretty --bind=test1,test2
 
-# Test authentication
-php bin/run.php Query --bind=secret123 --auth=admin:secret123
+# SHA-256 hash
+php bin/run.php Query SHA256 --bind=hello
+
+# SHA-512 with uppercase
+php bin/run.php Query SHA512 --bind=hello --uppercase
+
+# HMAC
+php bin/run.php Query Hmac --bind=mykey,mymessage
+
+# Argon2 hash
+php bin/run.php Query Argon2 --bind=password123
+
+# Argon2 verify
+php bin/run.php Query Argon2Verify --bind=hashvalue,password123
+
+# GCM encrypt with key + salt
+php bin/run.php Query EncGcm --bind=secret --key=mykey --salt=s1,s2
+
+# GCM decrypt with auth
+php bin/run.php Query DecGcm --bind=encrypted_data --auth=admin:secret123
+
+# Create key
+php bin/run.php Query CreateKey --amount=3
+
+# Create salt with options
+php bin/run.php Query CreateSalt --amount=5 --length=32 --sha
+
+# Create UUID
+php bin/run.php Query CreateUUID
+
+# Raw query
+php bin/run.php Query "SELECT MD5(:data) AS hash" --bind=test
 ```
 
 ## Available Methods
@@ -391,6 +542,13 @@ php bin/run.php Query --bind=secret123 --auth=admin:secret123
 ### Query Types
 - `raw(string $query)` - Execute raw MixQL query
 - `select(string $expression)` - SELECT query with hash expression
+- `sha256(string $expr = ':input')` - SHA-256 hash
+- `sha512(string $expr = ':input')` - SHA-512 hash
+- `encGcm(string $expr = ':input')` - AES-256-GCM authenticated encrypt
+- `decGcm(string $expr = ':input')` - AES-256-GCM authenticated decrypt
+- `hmac(string $keyExpr = ':key', string $msgExpr = ':msg')` - HMAC-SHA256 keyed hash
+- `argon2(string $expr = ':input')` - Argon2id password hash
+- `argon2Verify(string $hashExpr = ':hash', string $passExpr = ':password')` - Verify Argon2 hash
 - `createSalt()` - Generate random salt
 - `createKey()` - Generate encryption key
 - `createUUID()` - Generate UUID
@@ -423,13 +581,20 @@ The MixQL server supports these functions in SELECT queries:
 
 | Function | Description | Example |
 |---|---|---|
-| `SHA1(x)` | SHA-1 hash (hex) | `SHA1(:input)` |
-| `MD5(x)` | MD5 hash (hex) | `MD5(:data)` |
+| `SHA256(x)` | SHA-256 hash (hex, 64 chars) | `SHA256(:input)` |
+| `SHA512(x)` | SHA-512 hash (hex, 128 chars) | `SHA512(:input)` |
+| `SHA1(x)` | SHA-1 hash (hex) — legacy | `SHA1(:input)` |
+| `MD5(x)` | MD5 hash (hex) — legacy | `MD5(:data)` |
 | `BASE64_ENCODE(x)` | Base64 encode | `BASE64_ENCODE(:text)` |
 | `CONCAT(a, b, ...)` | Concatenate values | `CONCAT(:a, :b)` |
 | `NOW()` | Current Unix timestamp | `NOW()` |
 | `ENC(x)` | AES-256-CBC encrypt | `ENC(:input)` |
 | `DEC(x)` | AES-256-CBC decrypt | `DEC(:input)` |
+| `ENC_GCM(x)` | AES-256-GCM authenticated encrypt | `ENC_GCM(:input)` |
+| `DEC_GCM(x)` | AES-256-GCM authenticated decrypt | `DEC_GCM(:input)` |
+| `HMAC(key, msg)` | HMAC-SHA256 keyed hash (hex, 64 chars) | `HMAC(:key, :msg)` |
+| `ARGON2(x)` | Argon2id password hash | `ARGON2(:input)` |
+| `ARGON2_VERIFY(hash, x)` | Verify Argon2 hash (true/false) | `ARGON2_VERIFY(:hash, :password)` |
 
 ## Architecture & Documentation
 
