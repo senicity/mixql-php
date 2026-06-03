@@ -58,6 +58,13 @@ echo $result; // Outputs server response
 |---|---|---|
 | `raw(string $query)` | `<raw_query>` | Executes raw MixQL query string |
 | `select(string $hash)` | `SELECT <hash> AS hash` | SELECT query with hash expression |
+| `sha256(string $expr)` | `SELECT SHA256(<expr>) AS hash` | SHA-256 hash |
+| `sha512(string $expr)` | `SELECT SHA512(<expr>) AS hash` | SHA-512 hash |
+| `encGcm(string $expr)` | `SELECT ENC_GCM(<expr>) AS hash` | AES-256-GCM authenticated encrypt |
+| `decGcm(string $expr)` | `SELECT DEC_GCM(<expr>) AS hash` | AES-256-GCM authenticated decrypt |
+| `hmac(string $key, string $msg)` | `SELECT HMAC(<key>, <msg>) AS hash` | HMAC-SHA256 keyed hash |
+| `argon2(string $expr)` | `SELECT ARGON2(<expr>) AS hash` | Argon2id password hash |
+| `argon2Verify(string $hash, string $pass)` | `SELECT ARGON2_VERIFY(<hash>, <pass>) AS hash` | Verify Argon2 hash |
 | `createSalt()` | `CREATE SALT` | Generates random salt |
 | `createKey()` | `CREATE KEY` | Generates encryption key |
 | `createUUID()` | `CREATE UUID` | Generates UUID |
@@ -248,7 +255,7 @@ public function bind(array $params): self
 | **Commands** | `MIXQL_SELECT`, `MIXQL_CREATE_SALT` | Main query commands |
 | **Modifiers** | `MIXQL_LIMIT`, `MIXQL_LENGTH` | Query customization |
 | **Operators** | `MIXQL_ASHASH`, `MIXQL_STOREAS` | Query syntax elements |
-| **Functions** | `MIXQL_SHA` | Hash/transform functions |
+| **Functions** | `MIXQL_SHA`, `MIXQL_SHA256`, `MIXQL_SHA512`, `MIXQL_ENC_GCM`, `MIXQL_DEC_GCM`, `MIXQL_HMAC`, `MIXQL_ARGON2`, `MIXQL_ARGON2_VERIFY` | Hash/transform functions |
 
 **Usage in Query Building**:
 ```php

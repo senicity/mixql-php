@@ -58,6 +58,48 @@ class QueryTypes extends Extensions {
         return $this;
     }
 
+    public function sha256(string $expr = ':input'): self
+    {
+        $this->query = MIXQL_SELECT . MIXQL_SHA256 . $expr . ')' . MIXQL_ASHASH;
+        return $this;
+    }
+
+    public function sha512(string $expr = ':input'): self
+    {
+        $this->query = MIXQL_SELECT . MIXQL_SHA512 . $expr . ')' . MIXQL_ASHASH;
+        return $this;
+    }
+
+    public function encGcm(string $expr = ':input'): self
+    {
+        $this->query = MIXQL_SELECT . MIXQL_ENC_GCM . $expr . ')' . MIXQL_ASHASH;
+        return $this;
+    }
+
+    public function decGcm(string $expr = ':input'): self
+    {
+        $this->query = MIXQL_SELECT . MIXQL_DEC_GCM . $expr . ')' . MIXQL_ASHASH;
+        return $this;
+    }
+
+    public function hmac(string $keyExpr = ':key', string $msgExpr = ':msg'): self
+    {
+        $this->query = MIXQL_SELECT . MIXQL_HMAC . $keyExpr . ', ' . $msgExpr . ')' . MIXQL_ASHASH;
+        return $this;
+    }
+
+    public function argon2(string $expr = ':input'): self
+    {
+        $this->query = MIXQL_SELECT . MIXQL_ARGON2 . $expr . ')' . MIXQL_ASHASH;
+        return $this;
+    }
+
+    public function argon2Verify(string $hashExpr = ':hash', string $passExpr = ':password'): self
+    {
+        $this->query = MIXQL_SELECT . MIXQL_ARGON2_VERIFY . $hashExpr . ', ' . $passExpr . ')' . MIXQL_ASHASH;
+        return $this;
+    }
+
     public function auth(string $username, string $password): self
     {
         $this->query = MIXQL_AUTH . $username . ':' . $password . "\n" . $this->query;

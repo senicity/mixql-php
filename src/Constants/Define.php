@@ -21,3 +21,11 @@ define('MIXQL_AUTH', 'AUTH ');
 define('MIXQL_KEY', ' KEY ');
 define('MIXQL_SALT', ' SALT ');
 define('MIXQL_PEPPER', ' PEPPER ');
+
+define('MIXQL_SHA256', 'SHA256(');
+define('MIXQL_SHA512', 'SHA512(');
+define('MIXQL_ENC_GCM', 'ENC_GCM(');
+define('MIXQL_DEC_GCM', 'DEC_GCM(');
+define('MIXQL_HMAC', 'HMAC(');
+define('MIXQL_ARGON2', 'ARGON2(');
+define('MIXQL_ARGON2_VERIFY', 'ARGON2_VERIFY(');
