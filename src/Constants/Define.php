@@ -18,3 +18,6 @@ define('MIXQL_UPPERCASE', 'UPPERCASE');
 define('MIXQL_STOREAS', ' STORE AS ');
 define('MIXQL_STORED_QUERIES', 'STORED QUERIES');
 define('MIXQL_AUTH', 'AUTH ');
+define('MIXQL_KEY', ' KEY ');
+define('MIXQL_SALT', ' SALT ');
+define('MIXQL_PEPPER', ' PEPPER ');

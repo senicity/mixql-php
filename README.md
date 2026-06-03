@@ -126,7 +126,53 @@ $result = $mixql->select('BASE64_ENCODE(:text)')
                ->execute();
 ```
 
-### 2. CREATE SALT (Salt Generation)
+### 2. Encryption / Decryption
+
+```php
+// Encrypt a value (uses server's configured enc_key)
+$encrypted = $mixql->select('ENC(:input)')
+                   ->bind(['my secret data'])
+                   ->execute();
+
+// Decrypt a value (returns plaintext)
+$decrypted = $mixql->select('DEC(:input)')
+                   ->bind([$encrypted])
+                   ->execute();
+
+// Encrypt with a custom key (KEY clause)
+$encrypted = $mixql->select('ENC(:input)')
+                   ->bind(['my secret data'])
+                   ->key('mysecretkey123')
+                   ->execute();
+
+// Decrypt with a custom key
+$decrypted = $mixql->select('DEC(:input)')
+                   ->bind([$encrypted])
+                   ->key('mysecretkey123')
+                   ->execute();
+
+// Encrypt with PEPPER (interleaves between characters)
+$encrypted = $mixql->raw('SELECT ENC(:input) PEPPER :p1,:p2 AS hash')
+                   ->bind(['my secret', 'abc', 'xyz'])
+                   ->execute();
+
+// Encrypt with SALT (layered encryption passes)
+$encrypted = $mixql->raw('SELECT ENC(:input) SALT :s1,:s2 AS hash')
+                   ->bind(['my secret', 'saltkey1', 'saltkey2'])
+                   ->execute();
+
+// Full: KEY + SALT + PEPPER
+$encrypted = $mixql->raw('SELECT ENC(:input) KEY :key SALT :s1,:s2 PEPPER :p1,:p2 AS hash')
+                   ->bind(['message', 'mykey', 'salt1', 'salt2', 'pep1', 'pep2'])
+                   ->execute();
+
+// Decrypt with same KEY + SALT + PEPPER
+$decrypted = $mixql->raw('SELECT DEC(:input) KEY :key SALT :s1,:s2 PEPPER :p1,:p2 AS hash')
+                   ->bind([$encrypted, 'mykey', 'salt1', 'salt2', 'pep1', 'pep2'])
+                   ->execute();
+```
+
+### 3. CREATE SALT (Salt Generation)
 
 ```php
 // Single salt (16 characters default)
@@ -151,7 +197,7 @@ $result = $mixql->createSalt()
                ->execute();
 ```
 
-### 3. CREATE KEY (Key Generation)
+### 4. CREATE KEY (Key Generation)
 
 ```php
 // Single encryption key
@@ -163,14 +209,14 @@ $result = $mixql->createKey()
                ->execute();
 ```
 
-### 4. CREATE UUID (UUID Generation)
+### 5. CREATE UUID (UUID Generation)
 
 ```php
 // Generate a UUID
 $result = $mixql->createUUID()->execute();
 ```
 
-### 5. STORE Commands (Persistent Queries)
+### 6. STORE Commands (Persistent Queries)
 
 ```php
 // Store a query for reuse
@@ -193,7 +239,7 @@ $result = $mixql->storeUse('hash_password')
 $result = $mixql->storeDelete('hash_password')->execute();
 ```
 
-### 6. Raw Queries
+### 7. Raw Queries
 
 ```php
 // Execute raw MixQL query
@@ -319,6 +365,7 @@ php bin/run.php Query --bind=secret123 --auth=admin:secret123
 - `sha()` - Apply SHA-1 hashing (for CREATE SALT)
 - `uppercase()` - Convert output to uppercase
 - `store(string $name)` - Store query with name
+- `key(string $key)` - Set custom encryption key for ENC/DEC (KEY clause)
 - `bind(array $params)` - Bind parameters to placeholders
 
 ### Response Formatters
@@ -338,6 +385,8 @@ The MixQL server supports these functions in SELECT queries:
 | `BASE64_ENCODE(x)` | Base64 encode | `BASE64_ENCODE(:text)` |
 | `CONCAT(a, b, ...)` | Concatenate values | `CONCAT(:a, :b)` |
 | `NOW()` | Current Unix timestamp | `NOW()` |
+| `ENC(x)` | AES-256-CBC encrypt | `ENC(:input)` |
+| `DEC(x)` | AES-256-CBC decrypt | `DEC(:input)` |
 
 ## Architecture & Documentation
 
