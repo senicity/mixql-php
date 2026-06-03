@@ -38,6 +38,24 @@ class Extensions {
         return $this;
     }
 
+    public function key(string $key): self
+    {
+        $this->query = str_replace(MIXQL_ASHASH, MIXQL_KEY . $key . MIXQL_ASHASH, $this->query);
+        return $this;
+    }
+
+    public function salt(string ...$salts): self
+    {
+        $this->query = str_replace(MIXQL_ASHASH, MIXQL_SALT . implode(',', $salts) . MIXQL_ASHASH, $this->query);
+        return $this;
+    }
+
+    public function pepper(string ...$peppers): self
+    {
+        $this->query = str_replace(MIXQL_ASHASH, MIXQL_PEPPER . implode(',', $peppers) . MIXQL_ASHASH, $this->query);
+        return $this;
+    }
+
     public function store(string $name): self
     {
         $this->query = $this->query . MIXQL_STOREAS . $name;
