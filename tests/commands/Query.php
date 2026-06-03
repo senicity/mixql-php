@@ -40,18 +40,39 @@ class Query extends CommandHelpers {
         $options = $this->setDefaults($options);
 
         $query = match($name){
-            'CreateKey' => $this->mixql->createSalt()->amount((int)$options['amount'])->length((int)$options['length']),
+            'CreateKey' => $this->mixql->createKey()->amount((int)$options['amount']),
             'CreateSalt' => $this->mixql->createSalt()->amount((int)$options['amount'])->length((int)$options['length']),
             'CreateStore' => $this->mixql->select($options['storeQuery'])->store($options['storeName']),
             'CreateUUID' => $this->mixql->createUUID(),
             'DeleteStore' => $this->mixql->storeDelete($options['storeName']),
             'ListStore' => $this->mixql->storeList(),
             'Select' => $this->mixql->select($options['query']),
+            'SHA256' => $this->mixql->sha256($options['expr'] ?? ':input'),
+            'SHA512' => $this->mixql->sha512($options['expr'] ?? ':input'),
+            'EncGcm' => $this->mixql->encGcm($options['expr'] ?? ':input'),
+            'DecGcm' => $this->mixql->decGcm($options['expr'] ?? ':input'),
+            'Hmac' => $this->mixql->hmac($options['keyExpr'] ?? ':key', $options['msgExpr'] ?? ':msg'),
+            'Argon2' => $this->mixql->argon2($options['expr'] ?? ':input'),
+            'Argon2Verify' => $this->mixql->argon2Verify($options['hashExpr'] ?? ':hash', $options['passExpr'] ?? ':password'),
             default => $this->mixql->raw($this->params[0])
         };
 
         if(isset($options['bind'])){
             $query = $query->bind($options['bind']);
+        }
+
+        if(isset($options['key'])){
+            $query = $query->key($options['key']);
+        }
+
+        if(isset($options['salt'])){
+            $saltParts = is_array($options['salt']) ? $options['salt'] : explode(',', $options['salt']);
+            $query = $query->salt(...$saltParts);
+        }
+
+        if(isset($options['pepper'])){
+            $pepperParts = is_array($options['pepper']) ? $options['pepper'] : explode(',', $options['pepper']);
+            $query = $query->pepper(...$pepperParts);
         }
 
         if(isset($options['sha'])){
@@ -60,6 +81,11 @@ class Query extends CommandHelpers {
 
         if(isset($options['uppercase'])){
             $query = $query->uppercase();
+        }
+
+        if(isset($options['auth'])){
+            $authParts = explode(':', $options['auth']);
+            $query = $query->auth($authParts[0], $authParts[1] ?? '');
         }
 
         echo $this->color("Sending: ",'yellow'). "\n";
