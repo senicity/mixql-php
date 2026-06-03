@@ -151,24 +151,44 @@ $decrypted = $mixql->select('DEC(:input)')
                    ->key('mysecretkey123')
                    ->execute();
 
-// Encrypt with PEPPER (interleaves between characters)
-$encrypted = $mixql->raw('SELECT ENC(:input) PEPPER :p1,:p2 AS hash')
-                   ->bind(['my secret', 'abc', 'xyz'])
-                   ->execute();
-
 // Encrypt with SALT (layered encryption passes)
-$encrypted = $mixql->raw('SELECT ENC(:input) SALT :s1,:s2 AS hash')
-                   ->bind(['my secret', 'saltkey1', 'saltkey2'])
+$encrypted = $mixql->select('ENC(:input)')
+                   ->salt('saltkey1', 'saltkey2')
+                   ->bind(['my secret data'])
                    ->execute();
 
-// Full: KEY + SALT + PEPPER
-$encrypted = $mixql->raw('SELECT ENC(:input) KEY :key SALT :s1,:s2 PEPPER :p1,:p2 AS hash')
-                   ->bind(['message', 'mykey', 'salt1', 'salt2', 'pep1', 'pep2'])
+// Decrypt with SALT
+$decrypted = $mixql->select('DEC(:input)')
+                   ->salt('saltkey1', 'saltkey2')
+                   ->bind([$encrypted])
+                   ->execute();
+
+// Encrypt with PEPPER (interleaves between characters)
+$encrypted = $mixql->select('ENC(:input)')
+                   ->pepper('abc', 'xyz')
+                   ->bind(['my secret data'])
+                   ->execute();
+
+// Decrypt with PEPPER
+$decrypted = $mixql->select('DEC(:input)')
+                   ->pepper('abc', 'xyz')
+                   ->bind([$encrypted])
+                   ->execute();
+
+// Full: KEY + SALT + PEPPER combined
+$encrypted = $mixql->select('ENC(:input)')
+                   ->key('mykey')
+                   ->salt('salt1', 'salt2')
+                   ->pepper('pep1', 'pep2')
+                   ->bind(['my secret data'])
                    ->execute();
 
 // Decrypt with same KEY + SALT + PEPPER
-$decrypted = $mixql->raw('SELECT DEC(:input) KEY :key SALT :s1,:s2 PEPPER :p1,:p2 AS hash')
-                   ->bind([$encrypted, 'mykey', 'salt1', 'salt2', 'pep1', 'pep2'])
+$decrypted = $mixql->select('DEC(:input)')
+                   ->key('mykey')
+                   ->salt('salt1', 'salt2')
+                   ->pepper('pep1', 'pep2')
+                   ->bind([$encrypted])
                    ->execute();
 ```
 
@@ -365,7 +385,9 @@ php bin/run.php Query --bind=secret123 --auth=admin:secret123
 - `sha()` - Apply SHA-1 hashing (for CREATE SALT)
 - `uppercase()` - Convert output to uppercase
 - `store(string $name)` - Store query with name
-- `key(string $key)` - Set custom encryption key for ENC/DEC (KEY clause)
+- `key(string $key)` - Set custom encryption key for ENC/DEC
+- `salt(string ...$salts)` - Add SALT layers for ENC/DEC
+- `pepper(string ...$peppers)` - Add PEPPER interleaving for ENC/DEC
 - `bind(array $params)` - Bind parameters to placeholders
 
 ### Response Formatters
