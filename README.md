@@ -34,7 +34,28 @@ A fluent PHP client library for the MixQL encryption server. This package provid
 
 ## Installation
 
-### Basic Installation
+### Composer (recommended)
+
+Add the repository and require the package in your `composer.json`:
+
+```json
+{
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/senicity/mixql-php" }
+    ],
+    "require": {
+        "senicity/mixql": "^1.1"
+    }
+}
+```
+
+Then run:
+
+```bash
+composer update
+```
+
+### Manual Installation
 ```php
 // Include the autoloader
 include_once 'mixql-php/autoload.php';
@@ -46,7 +67,7 @@ include_once 'mixql-php/src/MixQL.php';
 ## Quick Start
 
 ```php
-include_once 'mixql-php/autoload.php';
+require_once 'vendor/autoload.php';
 
 // Create a MixQL instance (defaults to localhost:7272)
 $mixql = new MixQL();
@@ -315,7 +336,7 @@ try {
 ## Complete Example with All Features
 
 ```php
-include_once 'mixql-php/autoload.php';
+require_once 'vendor/autoload.php';
 
 // Configure connection
 $mixql = new MixQL(
