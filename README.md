@@ -84,18 +84,56 @@ echo $result; // Outputs the server response
 
 ### Connection Options
 ```php
-// Custom connection settings
+// Plain TCP (the default)
 $mixql = new MixQL(
-    ['timeout' => 30],  // Socket timeout in seconds
-    'mixql.example.com', // Server host
-    8080                // Server port
+    ['timeout' => 30],  // Socket read timeout in seconds
+    'mixql.example.com',
+    7272
+);
+
+// TLS over the same raw TCP protocol, for example through an Nginx
+// stream proxy terminating TLS on port 443.
+$mixql = new MixQL(
+    [
+        'timeout' => 30,
+        'connect_timeout' => 10,
+        'tls' => true,
+    ],
+    'mixql.example.com',
+    443
 );
 ```
+
+TLS uses PHP's built-in `tls://` stream transport. Certificate and hostname
+verification are enabled by default. The TLS server name defaults to the host,
+but can be overridden when the connection address and certificate name differ:
+
+```php
+$mixql = new MixQL(
+    [
+        'tls' => true,
+        'tls_server_name' => 'mixql.example.com',
+        'tls_ca_file' => '/path/to/ca-bundle.pem', // optional
+    ],
+    '10.0.0.10',
+    443
+);
+```
+
+For local development with a self-signed certificate, verification can be
+explicitly disabled with `'tls_verify' => false`. Keep verification enabled in
+production. Set `'tls_ca_path'` to provide a custom CA directory.
+
+The server must expose a raw TLS TCP endpoint. An HTTP reverse proxy is not
+compatible with the MixQL protocol. With Nginx stream TLS termination, the
+PHP client connects with `'tls' => true` while the MixQL server continues to
+use plain TCP behind Nginx.
 
 ### Default Values
 - **Host**: `'localhost'`
 - **Port**: `7272`
 - **Timeout**: `30` seconds
+- **TLS**: disabled
 
 ## Authentication
 
@@ -607,7 +645,8 @@ For detailed architecture and component documentation, see:
 
 - PHP 7.4+ (for typed properties, match expression)
 - MixQL server running (default: localhost:7272)
-- `fsockopen()` enabled for TCP sockets
+- `stream_socket_client()` enabled for TCP sockets
+- PHP OpenSSL support enabled when using TLS
 
 ## Security Notes
 

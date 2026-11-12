@@ -12,12 +12,17 @@ class MixQL extends QueryTypes {
     public Request $request;
 
     public function __construct(
-        public $options = [
-            'timeout' => 30
-        ],
+        public $options = [],
         public $host = 'localhost',
         public $port = 7272
     ){
+        $this->options = array_merge([
+            'timeout' => 30,
+            'connect_timeout' => 10,
+            'tls' => false,
+            'tls_verify' => true,
+        ], $this->options);
+
         $this->request = new Request(
             $this->host,
             $this->port,
